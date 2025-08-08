@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 std::uint32_t write_Function(void * ptr, std::uint32_t size, std::uint32_t member, void * user_data)
 {
@@ -58,6 +59,14 @@ int download(const char * url, const char * filename)
     if (write(fd, "", 1) == 1)
     {
         perror("write");
+        close(fd);
+        return -1;
+    }
+
+    char * ch_ptr = static_cast<char *>(mmap(NULL, downloadFileLength, PROT_READ, PROT_WRITE, fd, 0));
+    if (ch_ptr == MAP_FAILED)
+    {
+        perror("mmap");
         close(fd);
         return -1;
     }
