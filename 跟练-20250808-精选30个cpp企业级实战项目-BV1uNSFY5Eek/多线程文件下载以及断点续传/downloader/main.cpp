@@ -8,6 +8,8 @@
 #include <sys/mman.h>
 #include <string.h>
 
+#define THREAD_COUNT 10;
+
 struct fileInfo{
     char * file_ptr;
     int offset;
@@ -17,7 +19,7 @@ std::uint32_t write_Function(void * ptr, std::uint32_t size, std::uint32_t membe
 {
     struct fileInfo * info = static_cast<struct fileInfo *>(user_data);
     std::uint32_t result = size * member;
-    //std::cout << "write_Function: " << result << std::endl;
+    std::cout << "write_Function: " << result << std::endl;
     char * file_ptr = static_cast<char *>(user_data);
     memcpy(info->file_ptr + info->offset, ptr, result);
     info->offset += result;
