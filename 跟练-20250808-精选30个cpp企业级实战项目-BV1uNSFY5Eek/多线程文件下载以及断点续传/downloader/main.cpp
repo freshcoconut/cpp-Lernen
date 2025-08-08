@@ -75,13 +75,19 @@ int download(const char * url, const char * filename)
         return -1;
     }
 
-    char * file_ptr = static_cast<char *>(mmap(NULL, downloadFileLength, PROT_READ, PROT_WRITE, fd, 0));
+    char * file_ptr = static_cast<char *>(mmap(NULL, downloadFileLength, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
     if (file_ptr == MAP_FAILED)
     {
         perror("mmap");
         close(fd);
         return -1;
     }
+    //int i = 0;
+    //pthread_t threadid[THREAD_COUNT] = {0};
+    //for (i = 0; i < THREAD_COUNT; i++)
+    //{
+    //
+    //}
 
     struct fileInfo * info = static_cast<struct fileInfo *>(malloc(sizeof(struct fileInfo)));
     if (info == nullptr)
