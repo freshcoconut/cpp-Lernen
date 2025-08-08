@@ -49,6 +49,19 @@ int download(const char * url, const char * filename)
     std::uint64_t downloadFileLength = get_Download_File_Size(url);
     std::cout << "downloadFileLength: " << downloadFileLength << std::endl;
 
+    if (lseek(fd, downloadFileLength - 1, SEEK_SET) == -1)
+    {
+        perror("lseek");
+        close(fd);
+        return -1;
+    }
+    if (write(fd, "", 1) == 1)
+    {
+        perror("write");
+        close(fd);
+        return -1;
+    }
+
     CURL *curl_1 = curl_easy_init();
     curl_easy_setopt(curl_1, CURLOPT_URL, url);
     curl_easy_setopt(curl_1, CURLOPT_WRITEFUNCTION, write_Function);
