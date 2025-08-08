@@ -7,8 +7,9 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <string.h>
+#include <pthread.h>
 
-#define THREAD_COUNT 10;
+#define THREAD_COUNT 10
 
 struct fileInfo{
     char * file_ptr;
@@ -68,7 +69,7 @@ int download(const char * url, const char * filename)
         close(fd);
         return -1;
     }
-    if (write(fd, "", 1) == 1)
+    if (write(fd, "", 1) != 1)
     {
         perror("write");
         close(fd);
@@ -82,12 +83,6 @@ int download(const char * url, const char * filename)
         close(fd);
         return -1;
     }
-    //int i = 0;
-    //pthread_t threadid[THREAD_COUNT] = {0};
-    //for (i = 0; i < THREAD_COUNT; i++)
-    //{
-    //
-    //}
 
     struct fileInfo * info = static_cast<struct fileInfo *>(malloc(sizeof(struct fileInfo)));
     if (info == nullptr)
@@ -111,6 +106,7 @@ int download(const char * url, const char * filename)
     }
     curl_easy_cleanup(curl_1);
 
+    free(info);
     munmap(file_ptr, downloadFileLength);
     close(fd);
 
