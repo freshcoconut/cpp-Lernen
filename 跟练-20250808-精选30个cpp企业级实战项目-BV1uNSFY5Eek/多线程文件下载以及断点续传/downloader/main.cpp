@@ -6,11 +6,21 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <string.h>
+
+struct fileInfo{
+    char * file_ptr;
+    int offset;
+};
 
 std::uint32_t write_Function(void * ptr, std::uint32_t size, std::uint32_t member, void * user_data)
 {
+    struct fileInfo * info = static_cast<struct fileInfo *>(user_data);
     std::uint32_t result = size * member;
-    std::cout << "write_Function: " << result << std::endl;
+    //std::cout << "write_Function: " << result << std::endl;
+    char * file_ptr = static_cast<char *>(user_data);
+    std::memcpy(info->file_ptr + info->offset, ptr, result);
+    info->offset += result;
     return result;
 }
 
@@ -41,7 +51,7 @@ std::int64_t get_Download_File_Size(const char * url)
 int download(const char * url, const char * filename)
 {
     //writing
-    int fd = open(filename, O_RDWR | O_CREAT);
+    int fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd == -1)
     {
         return -1;
@@ -63,17 +73,28 @@ int download(const char * url, const char * filename)
         return -1;
     }
 
-    char * ch_ptr = static_cast<char *>(mmap(NULL, downloadFileLength, PROT_READ, PROT_WRITE, fd, 0));
-    if (ch_ptr == MAP_FAILED)
+    char * file_ptr = static_cast<char *>(mmap(NULL, downloadFileLength, PROT_READ, PROT_WRITE, fd, 0));
+    if (file_ptr == MAP_FAILED)
     {
         perror("mmap");
         close(fd);
         return -1;
     }
 
+    struct fileInfo * info = static_cast<struct fileInfo *>(malloc(sizeof(struct fileInfo)));
+    if (info == nullptr)
+    {
+        munmap(file_ptr, downloadFileLength);
+        close(fd);
+        return -1;
+    }
+    info->file_ptr = file_ptr;
+    info->offset = 0;
+
     CURL *curl_1 = curl_easy_init();
     curl_easy_setopt(curl_1, CURLOPT_URL, url);
     curl_easy_setopt(curl_1, CURLOPT_WRITEFUNCTION, write_Function);
+    curl_easy_setopt(curl_1, CURLOPT_WRITEDATA, info);
 
     CURLcode result_curl_1 = curl_easy_perform(curl_1);
     if (result_curl_1 != CURLE_OK)
@@ -81,6 +102,10 @@ int download(const char * url, const char * filename)
         std::printf("res: %d\n", result_curl_1);
     }
     curl_easy_cleanup(curl_1);
+
+    munmap(file_ptr, downloadFileLength);
+    close(fd);
+
     return 0;
 }
 
