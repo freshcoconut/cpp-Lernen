@@ -19,7 +19,7 @@ std::uint32_t write_Function(void * ptr, std::uint32_t size, std::uint32_t membe
     std::uint32_t result = size * member;
     //std::cout << "write_Function: " << result << std::endl;
     char * file_ptr = static_cast<char *>(user_data);
-    std::memcpy(info->file_ptr + info->offset, ptr, result);
+    memcpy(info->file_ptr + info->offset, ptr, result);
     info->offset += result;
     return result;
 }
