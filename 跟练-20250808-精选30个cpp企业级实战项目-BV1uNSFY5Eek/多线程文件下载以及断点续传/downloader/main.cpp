@@ -8,13 +8,14 @@
 
 std::uint32_t write_Function(void * ptr, std::uint32_t size, std::uint32_t member, void * user_data)
 {
-    std::cout << "write_Function" << std::endl;
-    return size * member;
+    std::uint32_t result = size * member;
+    std::cout << "write_Function: " << result << std::endl;
+    return result;
 }
 
-std::uint64_t get_Download_File_Size(const char * url)
+std::int64_t get_Download_File_Size(const char * url)
 {
-    std::uint64_t downloadFileLength = 0;
+    std::int64_t downloadFileLength = 0;
     CURL *curl_1 = curl_easy_init();
     curl_easy_setopt(curl_1, CURLOPT_URL, url);
     curl_easy_setopt(curl_1, CURLOPT_HEADER, 1);
@@ -23,10 +24,12 @@ std::uint64_t get_Download_File_Size(const char * url)
     CURLcode result_curl_1 = curl_easy_perform(curl_1);
     if (result_curl_1 == CURLE_OK)
     {
+        std::cout << "The downloadFileLength succeeds!" << std::endl;
         curl_easy_getinfo(curl_1, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &downloadFileLength);
     }
     else
     {
+        std::cout << "The downloadFileLength meets error!" << std::endl;
         downloadFileLength = -1;
     }
     curl_easy_cleanup(curl_1);
