@@ -1,7 +1,10 @@
-
 #include <iostream>
 #include <curl/curl.h>
 #include <cstdint>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 std::uint32_t write_Function(void * ptr, std::uint32_t size, std::uint32_t member, void * user_data)
 {
@@ -9,8 +12,40 @@ std::uint32_t write_Function(void * ptr, std::uint32_t size, std::uint32_t membe
     return size * member;
 }
 
+std::uint64_t get_Download_File_Size(const char * url)
+{
+    std::uint64_t downloadFileLength = 0;
+    CURL *curl_1 = curl_easy_init();
+    curl_easy_setopt(curl_1, CURLOPT_URL, url);
+    curl_easy_setopt(curl_1, CURLOPT_HEADER, 1);
+    curl_easy_setopt(curl_1, CURLOPT_NOBODY, 1);
+
+    CURLcode result_curl_1 = curl_easy_perform(curl_1);
+    if (result_curl_1 == CURLE_OK)
+    {
+        curl_easy_getinfo(curl_1, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &downloadFileLength);
+    }
+    else
+    {
+        downloadFileLength = -1;
+    }
+    curl_easy_cleanup(curl_1);
+
+    return downloadFileLength;
+}
+
 int download(const char * url, const char * filename)
 {
+    //writing
+    int fd = open(filename, O_RDWR | O_CREAT);
+    if (fd == -1)
+    {
+        return -1;
+    }
+
+    std::uint64_t downloadFileLength = get_Download_File_Size(url);
+    std::cout << "downloadFileLength: " << downloadFileLength << std::endl;
+
     CURL *curl_1 = curl_easy_init();
     curl_easy_setopt(curl_1, CURLOPT_URL, url);
     curl_easy_setopt(curl_1, CURLOPT_WRITEFUNCTION, write_Function);
@@ -26,5 +61,10 @@ int download(const char * url, const char * filename)
 
 int main(int argc, char * argv[])
 {
-    return download(argv[0], argv[1]);
+    if (argc != 3)
+    {
+        std::cout << "argc error!" << std::endl;
+        return -1;
+    }
+    return download(argv[1], argv[2]);
 }
